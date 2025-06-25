@@ -1,0 +1,252 @@
+/* Estilo base modernizado */
+body {
+  font-family: 'Quicksand', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f9f7f8;
+  color: #333;
+}
+
+/* Encabezado */
+header {
+  background: linear-gradient(90deg, #f4d9eb, #e3b6dc);
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: none;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #5e2129;
+}
+
+/* Navegación */
+nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+nav ul {
+  width: 90%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  list-style-type: none;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Logo */
+.logo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+nav ul li {
+  margin: 0 15px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: #5e2129;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+nav ul li a:hover {
+  background-color: #f4d9eb;
+}
+
+/* Contenido */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 30px auto;
+  padding: 10px;
+  max-width: 1600px;
+  gap: 20px;
+}
+
+/* Columnas */
+.column {
+  flex: 1;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  min-width: 400px;
+}
+
+.column.left {
+  border-right: none;
+}
+
+/* Tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 0.95rem;
+  border: 1px solid #ddd;
+}
+
+table th, table td {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+}
+
+table th {
+  background-color: #f9f0f7;
+  text-align: left;
+  color: #5e2129;
+}
+
+#tablaProductos, #tablaCompras {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  box-shadow: 1px 1px 10px rgba(0,0,0,0.05);
+}
+
+/* Estilos de formularios */
+.form-register {
+  width: 100%;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+}
+
+.form-register input, 
+.form-register select, 
+.form-register textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  background-color: #fff;
+  box-sizing: border-box;
+  transition: border 0.3s ease;
+}
+
+.form-register input:focus, 
+.form-register select:focus, 
+.form-register textarea:focus {
+  border-color: #dd7ccbdc;
+  outline: none;
+}
+
+.control::placeholder {
+  color: #888;
+}
+
+/* Buscadores */
+#buscarProducto, #buscarCompra {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #f4d9eb;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+/* Estilos para botones generales */
+button, .btn-agregar, .btn-delete, .btn-submit, .btn-tema {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #eaa1ec;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+button:hover, 
+.btn-agregar:hover, 
+.btn-delete:hover, 
+.btn-submit:hover, 
+.btn-tema:hover {
+  background-color: #bd6dc8;
+}
+
+/* Botón eliminar */
+.btn-delete {
+  background-color: #8f000e;
+}
+
+.btn-delete:hover {
+  background-color: #66000a;
+}
+
+/* Botón enviar */
+.btn-submit {
+  background-color: #dd7ccbdc;
+}
+
+.btn-submit:hover {
+  background-color: #5e2129;
+}
+
+/* Botón cambiar tema */
+.btn-tema {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* Enlace editar */
+.btn-editar {
+  text-decoration: none;
+  color: #5e2129;
+  font-weight: bold;
+}
+
+.btn-editar:hover {
+  color: #007BFF;
+}
+
+/* Botones con clase .control */
+.control[type="submit"],
+.control[type="button"],
+.control[type="reset"],
+button.control {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #eaa1ec;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.control[type="submit"]:hover,
+.control[type="button"]:hover,
+.control[type="reset"]:hover,
+button.control:hover {
+  background-color: #bd6dc8;
+}
+
