@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Proveedor</title>
     <script src="https://kit.fontawesome.com/b408879b64.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="/vamates3/assets/css/editar/edit.css">
+    <link rel="stylesheet" href="/vamates/assets/css/editar/edit.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 

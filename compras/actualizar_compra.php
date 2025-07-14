@@ -21,12 +21,12 @@ $conn->begin_transaction();
 try {
     // 1. Actualizar información básica de la compra
     $sql_update = "UPDATE compras SET 
-                  fecha = ?, 
-                  id_proveedor = ?, 
-                  estado = ?, 
-                  monto = ?,
-                  descripcion = CONCAT('Compra #', id, ' - ', DATE_FORMAT(fecha, '%d/%m/%Y'))
-                  WHERE id = ?";
+                    fecha = ?, 
+                    id_proveedor = ?, 
+                    estado = ?, 
+                    monto = ?,
+                    descripcion = CONCAT('Compra #', id, ' - ', DATE_FORMAT(fecha, '%d/%m/%Y'))
+                    WHERE id = ?";
     $stmt_update = $conn->prepare($sql_update);
     $stmt_update->bind_param("sisdi", $fecha, $id_proveedor, $estado, $total, $compra_id);
     $stmt_update->execute();
@@ -44,7 +44,7 @@ try {
     
     // 4. Preparar consultas
     $sql_insert_detalle = "INSERT INTO detalle_compras (id_compra, id_producto, cantidad, precio_unitario) 
-                          VALUES (?, ?, ?, ?)";
+                            VALUES (?, ?, ?, ?)";
     $stmt_insert_detalle = $conn->prepare($sql_insert_detalle);
     
     $sql_aumentar_stock = "UPDATE productos SET stock = stock + ? WHERE id = ?";

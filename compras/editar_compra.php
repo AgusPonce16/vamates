@@ -69,7 +69,7 @@ $proveedores = $conn->query("SELECT * FROM proveedores ORDER BY nombre ASC");
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://kit.fontawesome.com/b408879b64.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/vamates3/assets/css/editar/edit.css">
+    <link rel="stylesheet" href="/vamates/assets/css/editar/edit.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>

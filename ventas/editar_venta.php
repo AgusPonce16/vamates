@@ -41,9 +41,9 @@ $placeholders = implode(',', array_fill(0, count($productos_ids_en_venta), '?'))
 $types = str_repeat('i', count($productos_ids_en_venta));
 
 $sql_productos_disponibles = "SELECT * FROM productos 
-                             WHERE stock > 0 AND estado = 'activo' 
-                             OR id IN ($placeholders)
-                             ORDER BY nombre ASC";
+                                WHERE stock > 0 AND estado = 'activo' 
+                                OR id IN ($placeholders)
+                                ORDER BY nombre ASC";
 $stmt_productos = $conn->prepare($sql_productos_disponibles);
 
 if (!empty($productos_ids_en_venta)) {
@@ -63,7 +63,7 @@ $productos_disponibles = $stmt_productos->get_result()->fetch_all(MYSQLI_ASSOC);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://kit.fontawesome.com/b408879b64.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/vamates3/assets/css/editar/edit.css">
+    <link rel="stylesheet" href="/vamates/assets/css/editar/edit.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
