@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['usuario_id'] = $conn->insert_id;
         $_SESSION['usuario_nombre'] = $nombre;
         $_SESSION['es_admin'] = 1;
-        header("Location: dashboard/index.php"); 
+        header("Location: ../dashboard/index.php");; 
         exit();
     } else {
         header("Location: login.php?error=db_error");
