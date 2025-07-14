@@ -14,6 +14,13 @@ $mes_actual_inicio = date('Y-m-01');
 $trimestre_actual_inicio = date('Y-m-01', strtotime('-2 months'));
 $anio_actual_inicio = date('Y-01-01');
 
+// Obtener la fecha de la primera venta registrada
+$query_fecha_primera_venta = "SELECT MIN(fecha) as primera_venta FROM ventas";
+$res_primera_venta = $conn->query($query_fecha_primera_venta);
+$fecha_primera_venta = $res_primera_venta && $res_primera_venta->num_rows > 0
+    ? $res_primera_venta->fetch_assoc()['primera_venta']
+    : $anio_actual_inicio;
+
 // Filtros por defecto (mes actual)
 $fecha_inicio = $mes_actual_inicio;
 $fecha_fin = date('Y-m-t');
@@ -34,6 +41,10 @@ if (isset($_GET['periodo'])) {
         case 'trimestre':
             $fecha_inicio = $trimestre_actual_inicio;
             $fecha_fin = $hoy;
+            break;
+        case 'total':
+            $fecha_inicio = $fecha_primera_venta;
+            $fecha_fin = date('Y-m-t');
             break;
         case 'custom':
             if (isset($_GET['fecha_inicio']) && isset($_GET['fecha_fin'])) {
@@ -116,7 +127,7 @@ while ($row = $res_ventas_diarias->fetch_assoc()) {
 $patrones_yerba = ['baldo', 'canarias', 'rei verde', 'pindare', 'verdecita'];
 $patrones_mate = [
     'torpedo', 'camionero', 'imperial', 'bombilla', 'termo', 'sobres', 'latas',
-    'grabados', 'base', 'canasta', 'matepa', 'mochila', 'porta', 'criollo', 'dif', 'envio','difusor'
+    'grabados', 'base', 'canasta', 'matepa', 'mochila', 'porta', 'criollo', 'dif', 'envio'
 ];
 
 // Inicializar categorías
@@ -253,6 +264,7 @@ $margen_mates = $categorias['mates']['ventas'] > 0 ?
                     <button type="submit" name="periodo" value="semana" class="btn btn-outline-primary <?= isset($_GET['periodo']) && $_GET['periodo'] == 'semana' ? 'active' : '' ?>">Semanal</button>
                     <button type="submit" name="periodo" value="mes" class="btn btn-outline-primary <?= (!isset($_GET['periodo']) || $_GET['periodo'] == 'mes') ? 'active' : '' ?>">Mensual</button>
                     <button type="submit" name="periodo" value="trimestre" class="btn btn-outline-primary <?= isset($_GET['periodo']) && $_GET['periodo'] == 'trimestre' ? 'active' : '' ?>">Trimestral</button>
+                    <button type="submit" name="periodo" value="total" class="btn btn-outline-primary <?= isset($_GET['periodo']) && $_GET['periodo'] == 'total' ? 'active' : '' ?>">Total</button>
                 </div>
                 <div class="input-group input-group-sm ms-3" style="width: 250px;">
                     <input type="date" name="fecha_inicio" value="<?= $fecha_inicio ?>" class="form-control">

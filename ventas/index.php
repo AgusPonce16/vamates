@@ -513,7 +513,7 @@
 </div>
 
 <script>
-// Script mejorado que reemplaza el JavaScript existente en tu index
+
 document.addEventListener('DOMContentLoaded', function() {
     const productosContainer = document.getElementById('productosContainer');
     const envioInput = document.getElementById('envio');
@@ -524,41 +524,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Función para actualizar precios y total 
     function actualizarPrecios() {
-        let total = 0;
+    let total = 0;
+    
+    document.querySelectorAll('.producto-item').forEach(item => {
+        const select = item.querySelector('.producto-select');
+        const cantidadInput = item.querySelector('.cantidad');
+        const descuentoSelect = item.querySelector('.descuento');
+        const subtotalInput = item.querySelector('.subtotal');
+        const detalleDescuento = item.querySelector('.detalle-descuento');
+        const precioOriginal = item.querySelector('.precio-original');
+        const precioDescuento = item.querySelector('.precio-descuento');
+        const porcentajeDescuento = item.querySelector('.porcentaje-descuento');
         
-        document.querySelectorAll('.producto-item').forEach(item => {
-            const select = item.querySelector('.producto-select');
-            const cantidadInput = item.querySelector('.cantidad');
-            const descuentoSelect = item.querySelector('.descuento');
-            const subtotalInput = item.querySelector('.subtotal');
-            const detalleDescuento = item.querySelector('.detalle-descuento');
-            const precioOriginal = item.querySelector('.precio-original');
-            const precioDescuento = item.querySelector('.precio-descuento');
-            const porcentajeDescuento = item.querySelector('.porcentaje-descuento');
-            
-            const selectedOption = select.options[select.selectedIndex];
-            const precioUnitario = parseFloat(selectedOption.dataset.precio) || 0;
-            const cantidad = parseInt(cantidadInput.value) || 0;
-            const descuento = parseFloat(descuentoSelect.value) || 0;
-            
-            // Extraer el stock disponible del texto de la opción
-            const stockMatch = selectedOption.text.match(/Stock: (\d+)/);
-            const stockDisponible = stockMatch ? parseInt(stockMatch[1]) : 0;
-            
-            // NUEVA VALIDACIÓN CON VERIFICADOR DE STOCK
-            if (cantidad > stockDisponible && select.value) {
-                // En lugar de mostrar SweetAlert aquí, usar el verificador
-                verificarStockEnTiempoReal(cantidadInput);
-                return; // Salir de esta iteración
-            }
-            
-            const subtotalSinDescuento = precioUnitario * cantidad;
-            const montoDescuento = subtotalSinDescuento * (descuento / 100);
-            const subtotalConDescuento = subtotalSinDescuento - montoDescuento;
-            
-            subtotalInput.value = subtotalConDescuento.toFixed(2);
-            total += subtotalConDescuento;
-            
+        // Validar que todos los elementos existen
+        if (!select || !cantidadInput || !descuentoSelect || !subtotalInput) return;
+        
+        const selectedOption = select.options[select.selectedIndex];
+        const precioUnitario = parseFloat(selectedOption?.dataset.precio) || 0;
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        const descuento = parseFloat(descuentoSelect.value) || 0;
+        
+        // Extraer el stock disponible del texto de la opción
+        const stockMatch = selectedOption?.text?.match(/Stock: (\d+)/);
+        const stockDisponible = stockMatch ? parseInt(stockMatch[1]) : 0;
+        
+        if (cantidad > stockDisponible && select.value) {
+            verificarStockEnTiempoReal(cantidadInput);
+            return;
+        }
+        
+        const subtotalSinDescuento = precioUnitario * cantidad;
+        const montoDescuento = subtotalSinDescuento * (descuento / 100);
+        const subtotalConDescuento = subtotalSinDescuento - montoDescuento;
+        
+        subtotalInput.value = subtotalConDescuento.toFixed(2);
+        total += subtotalConDescuento;
+        
+        if (detalleDescuento && precioOriginal && precioDescuento && porcentajeDescuento) {
             if (descuento > 0) {
                 detalleDescuento.style.display = 'block';
                 precioOriginal.textContent = '$' + subtotalSinDescuento.toFixed(2);
@@ -567,30 +569,32 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 detalleDescuento.style.display = 'none';
             }
-        });
-        
-        const envio = parseFloat(envioInput.value) || 0;
-        total += envio;
-        
-        document.getElementById('total-venta').textContent = total.toFixed(2);
-        document.getElementById('total').value = total.toFixed(2);
-    }
+        }
+    });
+    
+    const envio = parseFloat(envioInput.value) || 0;
+    total += envio;
+    
+    document.getElementById('total-venta').textContent = total.toFixed(2);
+    document.getElementById('total').value = total.toFixed(2);
+}
+
     
     // Agregar nuevo producto
     productosContainer.addEventListener('click', function(e) {
-        if (e.target.closest('.add-producto')) {
-            const nuevoProducto = productoOriginal.cloneNode(true);
-            nuevoProducto.querySelector('.producto-select').selectedIndex = 0;
-            nuevoProducto.querySelector('.cantidad').value = 1;
-            nuevoProducto.querySelector('.descuento').selectedIndex = 0;
-            nuevoProducto.querySelector('.subtotal').value = '';
-            nuevoProducto.querySelector('.detalle-descuento').style.display = 'none';
-            
-            productosContainer.appendChild(nuevoProducto);
-            
-            // Enfocar el select del nuevo producto
-            nuevoProducto.querySelector('.producto-select').focus();
-        }
+    if (e.target.closest('.add-producto')) {
+        const nuevoProducto = productoOriginal.cloneNode(true);
+        nuevoProducto.querySelector('.producto-select').selectedIndex = 0;
+        nuevoProducto.querySelector('.cantidad').value = 1;
+        nuevoProducto.querySelector('.descuento').selectedIndex = 0;
+        nuevoProducto.querySelector('.subtotal').value = '';
+        nuevoProducto.querySelector('.detalle-descuento').style.display = 'none';
+        
+        productosContainer.appendChild(nuevoProducto);
+        nuevoProducto.querySelector('.producto-select').focus();
+        actualizarPrecios(); // Esta línea es nueva - fuerza actualización
+    }
+
         
         // Eliminar producto
         if (e.target.closest('.remove-producto')) {
@@ -609,26 +613,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
-    // NUEVOS EVENT LISTENERS CON VALIDACIÓN DE STOCK
+    // Event listeners mejorados para actualización de precios
     productosContainer.addEventListener('change', function(e) {
-        if (e.target.classList.contains('producto-select')) {
-            // Limpiar cache cuando cambie el producto
-            if (window.validadorStock) {
+        if (e.target.classList.contains('producto-select') || 
+            e.target.classList.contains('descuento') || 
+            e.target.classList.contains('cantidad')) {
+            actualizarPrecios();
+            
+            // Limpiar cache cuando cambie el producto (para validación de stock)
+            if (e.target.classList.contains('producto-select') && window.validadorStock) {
                 window.validadorStock.limpiarCache();
             }
-            actualizarPrecios();
-        } else if (e.target.classList.contains('descuento')) {
+        }
+    });
+
+    productosContainer.addEventListener('input', function(e) {
+        if (e.target.classList.contains('cantidad')) {
+            verificarStockEnTiempoReal(e.target);
             actualizarPrecios();
         }
     });
     
-    productosContainer.addEventListener('input', function(e) {
-        if (e.target.classList.contains('cantidad')) {
-            // Verificar stock en tiempo real al cambiar cantidad
-            verificarStockEnTiempoReal(e.target);
-        }
-    });
+
     
     // Event listener mejorado para el envío
     envioInput.addEventListener('input', function() {

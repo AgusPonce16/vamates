@@ -1,510 +1,375 @@
-<?php 
-include '../includes/header.php';
+<?php
 include '../config/config.php';
+include '../includes/header.php';
 
-// Verificar que se reciba el ID
+// Verificar si se recibió el ID de la compra
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    header('Location: index.php?alert=error');
-    exit;
+    header('Location: index.php?alert=error&message=Compra no especificada');
+    exit();
 }
 
-$id_compra = intval($_GET['id']);
+$compra_id = intval($_GET['id']);
 
-// Obtener datos de la compra
-$sql_compra = "SELECT * FROM compras WHERE id = ?";
-$stmt = $conn->prepare($sql_compra);
-$stmt->bind_param("i", $id_compra);
-$stmt->execute();
-$compra = $stmt->get_result()->fetch_assoc();
+// Obtener información de la compra
+$sql_compra = "SELECT c.*, p.nombre AS nombre_proveedor 
+                FROM compras c
+                LEFT JOIN proveedores p ON c.id_proveedor = p.id
+                WHERE c.id = ?";
+$stmt_compra = $conn->prepare($sql_compra);
+$stmt_compra->bind_param("i", $compra_id);
+$stmt_compra->execute();
+$result_compra = $stmt_compra->get_result();
 
-if (!$compra) {
-    header('Location: index.php?alert=error');
-    exit;
+if ($result_compra->num_rows === 0) {
+    header('Location: index.php?alert=error&message=Compra no encontrada');
+    exit();
 }
 
-// Obtener detalles de la compra
-$sql_detalles = "SELECT cd.*, p.nombre as producto_nombre 
-                FROM detalle_compras cd 
-                JOIN productos p ON cd.id_producto = p.id 
-                WHERE cd.id_compra = ?";
+$compra = $result_compra->fetch_assoc();
 
-$stmt_detalles = $conn->prepare($sql_detalles);
-$stmt_detalles->bind_param("i", $id_compra);
-$stmt_detalles->execute();
-$detalles = $stmt_detalles->get_result()->fetch_all(MYSQLI_ASSOC);
+// Obtener los productos de la compra
+$sql_productos = "SELECT dc.*, p.nombre, p.precio_compra, p.stock 
+                    FROM detalle_compras dc 
+                    JOIN productos p ON dc.id_producto = p.id 
+                    WHERE dc.id_compra = ?";
+$stmt_productos = $conn->prepare($sql_productos);
+$stmt_productos->bind_param("i", $compra_id);
+$stmt_productos->execute();
+$result_productos = $stmt_productos->get_result();
+$productos_compra = $result_productos->fetch_all(MYSQLI_ASSOC);
+
+// Obtener todos los productos disponibles (incluyendo stock 0 para productos ya en la compra)
+$productos_ids_en_compra = array_column($productos_compra, 'id_producto');
+$placeholders = implode(',', array_fill(0, count($productos_ids_en_compra), '?'));
+$types = str_repeat('i', count($productos_ids_en_compra));
+
+$sql_productos_disponibles = "SELECT * FROM productos 
+                                WHERE estado = 'activo' 
+                                OR id IN ($placeholders)
+                                ORDER BY nombre ASC";
+$stmt_productos = $conn->prepare($sql_productos_disponibles);
+
+if (!empty($productos_ids_en_compra)) {
+    $stmt_productos->bind_param($types, ...$productos_ids_en_compra);
+}
+
+$stmt_productos->execute();
+$productos_disponibles = $stmt_productos->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Obtener proveedores
+$proveedores = $conn->query("SELECT * FROM proveedores ORDER BY nombre ASC");
 ?>
 
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <title>Editar Compra</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://kit.fontawesome.com/b408879b64.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="/vamates3/assets/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/vamates3/assets/css/editar/edit.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
-<style>
-    :root {
-        --primary-color: #8e44ad;
-        --secondary-color: #9b59b6;
-        --danger-color: #e74c3c;
-        --warning-color: #f39c12;
-        --success-color: #2ecc71;
-        --light-color: #f5f5f5;
-        --dark-color: #333;
-        --border-radius: 8px;
-        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        font-family: 'Roboto', sans-serif;
-    }
-
-    .edit-form {
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: var(--border-radius);
-        padding: 25px;
-        box-shadow: var(--box-shadow);
-    }
-
-    .header-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid var(--primary-color);
-    }
-
-    h2 {
-        color: var(--dark-color);
-        margin: 0;
-        font-weight: 500;
-    }
-
-    .btn-back {
-        background-color: #6c757d;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        font-size: 14px;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: background-color 0.3s;
-    }
-
-    .btn-back:hover {
-        background-color: #5a6268;
-        color: white;
-        text-decoration: none;
-    }
-
-    .control {
-        width: 100%;
-        padding: 10px 15px;
-        margin: 8px 0 15px;
-        border: 1px solid #ddd;
-        border-radius: var(--border-radius);
-        box-sizing: border-box;
-        font-size: 14px;
-        transition: border-color 0.3s;
-    }
-
-    .control:focus {
-        border-color: var(--primary-color);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
-    }
-
-    .form-container {
-        background: #f9f9f9;
-        border: 1px solid #e0e0e0;
-        border-radius: var(--border-radius);
-        padding: 20px;
-        margin-bottom: 25px;
-    }
-
-    .btn-submit {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 500;
-        transition: background-color 0.3s;
-        width: 100%;
-    }
-
-    .btn-submit:hover {
-        background-color: var(--secondary-color);
-    }
-
-    .btn-agregar {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 15px;
-    }
-
-    .btn-agregar:hover {
-        background-color: var(--secondary-color);
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-        font-size: 14px;
-    }
-
-    th, td {
-        border: 1px solid #e0e0e0;
-        padding: 12px;
-        text-align: left;
-    }
-
-    th {
-        background-color: var(--primary-color);
-        color: white;
-        font-weight: 500;
-    }
-
-    tr:nth-child(even) {
-        background-color: #fafafa;
-    }
-
-    .total-display {
-        font-size: 1.2em;
-        font-weight: 500;
-        margin: 15px 0;
-        padding: 12px;
-        background-color: #e8f5e9;
-        border-radius: var(--border-radius);
-        text-align: center;
-    }
-
-    .btn-action {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 5px;
-        margin: 0 3px;
-        font-size: 16px;
-        transition: transform 0.2s;
-    }
-
-    .btn-action:hover {
-        transform: scale(1.1);
-    }
-
-    .btn-delete {
-        color: var(--danger-color);
-    }
-
-    .info-compra {
-        background: #e3f2fd;
-        border: 1px solid #2196f3;
-        border-radius: var(--border-radius);
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-
-    .info-compra h4 {
-        margin: 0 0 10px 0;
-        color: #1976d2;
-    }
-</style>
-
-<div class="container">
+<body>
+<div class="edit-container">
     <div class="edit-form">
-        <div class="header-section">
-            <h2>Editar Compra #<?= $compra['id'] ?></h2>
-            <a href="index.php" class="btn-back">
+        <div class="edit-header-section">
+            <h2><i class="fas fa-edit"></i> Editar Compra #<?= $compra['id'] ?></h2>
+            
+            <a href="index.php" class="edit-btn-back">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
         </div>
-
-        <div class="info-compra">
+        
+        <div class="edit-info-box">
             <h4>Información de la Compra</h4>
-            <p><strong>Fecha:</strong> <?= date('d/m/Y', strtotime($compra['fecha'])) ?></p>
-            <p><strong>Estado:</strong> <?= ucfirst($compra['estado']) ?></p>
-            <p><strong>Monto Original:</strong> $<?= number_format($compra['monto'], 2, ',', '.') ?></p>
+            <p><strong>Fecha original:</strong> <?= date('d/m/Y', strtotime($compra['fecha'])) ?></p>
+            <p><strong>Proveedor original:</strong> <?= htmlspecialchars($compra['nombre_proveedor'] ?? 'No especificado') ?></p>
+            <p><strong>Total original:</strong> $<?= number_format($compra['monto'], 2) ?></p>
         </div>
         
-        <form id="formEditarCompra" action="actualizar_compra.php" method="post" class="form-container">
-            <input type="hidden" name="id_compra" value="<?= $id_compra ?>">
+        <form action="actualizar_compra.php" method="post" id="formCompra">
+            <input type="hidden" name="compra_id" value="<?= $compra['id'] ?>">
             
-            <input class="control" type="date" name="fecha" value="<?= $compra['fecha'] ?>" required>
+            <div class="edit-form-group">
+                <label for="fecha">Fecha</label>
+                <input class="edit-control" type="date" name="fecha" id="fecha" value="<?= htmlspecialchars($compra['fecha']) ?>" required>
+                <div class="edit-error-message" id="fechaError">La fecha debe ser de 2025 en adelante</div>
+            </div>
             
-            <!-- Selector de proveedor -->
-            <select name="id_proveedor" class="control" required>
-                <option value="">Seleccionar proveedor</option>
-                <?php
-                $proveedores = $conn->query("SELECT * FROM proveedores ORDER BY nombre ASC");
-                while ($prov = $proveedores->fetch_assoc()) {
-                    $selected = ($prov['id'] == $compra['id_proveedor']) ? 'selected' : '';
-                    echo "<option value='{$prov['id']}' {$selected}>{$prov['nombre']}</option>";
-                }
-                ?>
-            </select>
-
-            <!-- Selector de productos -->
-            <select id="productoSelect" class="control">
-                <option value="">Seleccioná un producto</option>
-                <?php
-                $productos = $conn->query("SELECT * FROM productos ORDER BY nombre ASC");
-                while ($prod = $productos->fetch_assoc()) {
-                    echo "<option value='{$prod['id']}' data-precio='{$prod['precio_compra']}'>{$prod['nombre']} - $ {$prod['precio_compra']} (Stock: {$prod['stock']})</option>";
-                }
-                ?>
-            </select>
-            <!-- Dentro del formulario, después del selector de productos -->
-            <div class="form-group">
-                <label for="ajuste">Ajuste / Recargo (positivo o negativo):</label>
-                <input type="number" step="0.01" name="ajuste" id="ajuste" class="control" 
-                    value="<?= isset($compra['ajuste']) ? $compra['ajuste'] : '0' ?>">
+            <div class="edit-form-group">
+                <label for="id_proveedor">Proveedor</label>
+                <select name="id_proveedor" id="id_proveedor" class="edit-control" required>
+                    <option value="">Seleccionar proveedor</option>
+                    <?php while ($prov = $proveedores->fetch_assoc()): ?>
+                        <option value="<?= $prov['id'] ?>" <?= $prov['id'] == $compra['id_proveedor'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($prov['nombre']) ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
             </div>
-
-            <!-- Actualizar el display del total para incluir el ajuste -->
-            <div class="total-display">
-                Subtotal: $<span id="subtotalCompra">0.00</span><br>
-                Ajuste: $<span id="ajusteDisplay"><?= isset($compra['ajuste']) ? number_format($compra['ajuste'], 2) : '0.00' ?></span><br>
-                <strong>Total: $<span id="totalCompra">0.00</span></strong>
+            
+            <div class="edit-form-group">
+                <label for="estado">Estado</label>
+                <select name="estado" id="estado" class="edit-control" required>
+                    <option value="pendiente" <?= $compra['estado'] == 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
+                    <option value="pagada" <?= $compra['estado'] == 'pagada' ? 'selected' : '' ?>>Pagada</option>
+                    <option value="cancelada" <?= $compra['estado'] == 'cancelada' ? 'selected' : '' ?>>Cancelada</option>
+                </select>
             </div>
-
-            <input type="number" id="cantidadInput" class="control" placeholder="Cantidad" min="1" value="1">
-            <input type="number" id="precioInput" class="control" placeholder="Precio unitario" step="0.01" min="0">
-
-            <select name="estado" class="control" required>
-                <option value="pendiente" <?= $compra['estado'] == 'pendiente' ? 'selected' : '' ?>>Pendiente</option>
-                <option value="pagada" <?= $compra['estado'] == 'pagada' ? 'selected' : '' ?>>Pagada</option>
-                <option value="cancelada" <?= $compra['estado'] == 'cancelada' ? 'selected' : '' ?>>Cancelada</option>
-            </select>
-
-            <button type="button" class="btn-agregar" onclick="agregarProducto()">
-                <i class="fas fa-plus"></i> Agregar Producto
+            
+            <h3>Productos</h3>
+            <div id="productosContainer">
+                <?php foreach ($productos_compra as $producto): ?>
+                    <div class="edit-producto-item">
+                        <div class="edit-producto-grid">
+                            <select name="producto_id[]" class="edit-producto-select edit-control" required>
+                                <option value="">Selecciona un producto</option>
+                                <?php foreach ($productos_disponibles as $prod): ?>
+                                    <option value="<?= $prod['id'] ?>" 
+                                            data-precio="<?= $prod['precio_compra'] ?>"
+                                            data-stock="<?= $prod['stock'] ?>"
+                                            <?= $prod['id'] == $producto['id_producto'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($prod['nombre']) ?> 
+                                        (Stock: <?= $prod['stock'] ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            
+                            <input type="number" name="cantidad[]" class="edit-cantidad edit-control" 
+                                    placeholder="Cantidad" min="1" 
+                                    value="<?= $producto['cantidad'] ?>" required>
+                            
+                            <input type="number" name="precio_unitario[]" class="edit-precio edit-control" 
+                                    placeholder="Precio unitario" step="0.01" min="0"
+                                    value="<?= $producto['precio_unitario'] ?>" required>
+                                    
+                            <input type="text" class="edit-subtotal edit-control" placeholder="Subtotal" readonly
+                                   value="<?= number_format($producto['cantidad'] * $producto['precio_unitario'], 2) ?>">
+                                    
+                            <button type="button" class="edit-btn-action edit-btn-delete edit-remove-producto">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <button type="button" class="edit-btn-agregar edit-add-producto">
+                <i class="fas fa-plus"></i> Agregar otro producto
             </button>
             
-            <!-- Tabla de productos agregados -->
-            <table id="tablaProductos">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unitario</th>
-                        <th>Subtotal</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            
-            <div class="total-display">
-                Total: $<span id="totalCompra">0.00</span>
+            <div class="edit-form-group">
+                <label for="ajuste">Descuento o Recargo ($)</label>
+                <input type="number" name="ajuste" id="ajuste" class="edit-control" 
+                        placeholder="Ej: -100 para descuento o 50 para recargo" step="0.01" 
+                        value="<?= $compra['monto'] - array_reduce($productos_compra, function($carry, $item) {
+                           return $carry + ($item['cantidad'] * $item['precio_unitario']);
+                        }, 0) ?>">
             </div>
             
-            <!-- Campos ocultos para el formulario -->
-            <input type="hidden" name="productosJSON" id="productosJSON">
-            <input type="hidden" name="descripcion" id="descripcionInput">
-            <input type="hidden" name="monto" id="montoInput">
+            <div class="edit-total-display">
+                <strong>Total Compra:</strong> $<span id="total-compra"><?= number_format($compra['monto'], 2) ?></span>
+            </div>
             
-            <input class="btn-submit" type="submit" value="Actualizar Compra">
+            <input type="hidden" name="total" id="total" value="<?= $compra['monto'] ?>">
+            <input type="hidden" name="productos_originales" id="productos_originales" 
+                    value="<?= htmlspecialchars(json_encode(array_map(function($p) {
+                        return ['id_producto' => $p['id_producto'], 'cantidad' => $p['cantidad']];
+                    }, $productos_compra))) ?>">
+            
+            <button type="submit" class="edit-btn-submit">
+                <i class="fas fa-save"></i> Actualizar Compra
+            </button>
         </form>
     </div>
 </div>
 
 <script>
-    // Variables globales
-let productosAgregados = [];
-let ajuste = <?= isset($compra['ajuste']) ? $compra['ajuste'] : 0 ?>;
-
-// Función para actualizar la tabla y los totales
-function actualizarTabla() {
-    const tbody = document.querySelector("#tablaProductos tbody");
-    tbody.innerHTML = "";
-    let subtotal = 0;
-    let descripcion = [];
-    
-    productosAgregados.forEach((prod, index) => {
-        subtotal += prod.subtotal;
-        descripcion.push(`${prod.cantidad}x ${prod.nombre}`);
-        
-        tbody.innerHTML += `
-            <tr>
-                <td>${prod.nombre}</td>
-                <td>${prod.cantidad}</td>
-                <td>$ ${prod.precio.toFixed(2)}</td>
-                <td>$ ${prod.subtotal.toFixed(2)}</td>
-                <td>
-                    <button class="btn-action btn-delete" onclick="quitarProducto(${index})">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            </tr>`;
-    });
-
-    // Actualizar totales y campos ocultos
-    document.getElementById("subtotalCompra").textContent = subtotal.toFixed(2);
-    document.getElementById("ajusteDisplay").textContent = ajuste.toFixed(2);
-    
-    const total = subtotal + parseFloat(ajuste);
-    document.getElementById("totalCompra").textContent = total.toFixed(2);
-    
-    document.getElementById("montoInput").value = total;
-    document.getElementById("descripcionInput").value = descripcion.join(", ");
-    document.getElementById("productosJSON").value = JSON.stringify(productosAgregados);
-}
-
-// Event listener para el campo de ajuste
-document.getElementById("ajuste").addEventListener('change', function() {
-    ajuste = parseFloat(this.value) || 0;
-    actualizarTabla();
-});
-
-// Al cargar la página, inicializar con productos existentes
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar productos existentes
-    productosExistentes.forEach(detalle => {
-        productosAgregados.push({
-            id: detalle.id_producto.toString(),
-            nombre: detalle.producto_nombre,
-            precio: parseFloat(detalle.precio_unitario),
-            cantidad: parseInt(detalle.cantidad),
-            subtotal: parseFloat(detalle.precio_unitario) * parseInt(detalle.cantidad)
+    const productosContainer = document.getElementById('productosContainer');
+    const ajusteInput = document.getElementById('ajuste');
+    const formCompra = document.getElementById('formCompra');
+    
+    // Clonar plantilla de producto
+    const productoOriginal = productosContainer.querySelector('.edit-producto-item');
+    
+    // Función para actualizar precios y total
+    function actualizarPrecios() {
+        let subtotalProductos = 0;
+        
+        document.querySelectorAll('.edit-producto-item').forEach(item => {
+            const select = item.querySelector('.edit-producto-select');
+            const cantidadInput = item.querySelector('.edit-cantidad');
+            const precioInput = item.querySelector('.edit-precio');
+            const subtotalInput = item.querySelector('.edit-subtotal');
+            
+            if (!select || !cantidadInput || !precioInput || !subtotalInput) return;
+            
+            const cantidad = parseInt(cantidadInput.value) || 0;
+            const precio = parseFloat(precioInput.value) || 0;
+            const subtotal = cantidad * precio;
+            
+            subtotalInput.value = subtotal.toFixed(2);
+            subtotalProductos += subtotal;
         });
+        
+        const ajuste = parseFloat(ajusteInput.value) || 0;
+        const total = subtotalProductos + ajuste;
+        
+        document.getElementById('total-compra').textContent = total.toFixed(2);
+        document.getElementById('total').value = total.toFixed(2);
+    }
+    
+    // Agregar nuevo producto
+    document.querySelector('.edit-add-producto').addEventListener('click', function() {
+        const nuevoProducto = productoOriginal.cloneNode(true);
+        nuevoProducto.querySelector('.edit-producto-select').selectedIndex = 0;
+        nuevoProducto.querySelector('.edit-cantidad').value = 1;
+        nuevoProducto.querySelector('.edit-precio').value = '';
+        nuevoProducto.querySelector('.edit-subtotal').value = '';
+        
+        productosContainer.appendChild(nuevoProducto);
+        nuevoProducto.querySelector('.edit-producto-select').focus();
     });
     
-    // Inicializar ajuste si existe
-    ajuste = <?= isset($compra['ajuste']) ? $compra['ajuste'] : 0 ?>;
-    document.getElementById("ajuste").value = ajuste;
-    
-    actualizarTabla();
-
-});
-
-    
-    // Actualizar precio al seleccionar producto
-    document.getElementById("productoSelect").addEventListener('change', function() {
-        const option = this.options[this.selectedIndex];
-        if (option.value) {
-            document.getElementById("precioInput").value = option.dataset.precio || '';
+    // Eliminar producto
+    productosContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-remove-producto')) {
+            const productoItem = e.target.closest('.edit-producto-item');
+            if (document.querySelectorAll('.edit-producto-item').length > 1) {
+                productoItem.remove();
+                actualizarPrecios();
+            } else {
+                // Si es el último, resetearlo en lugar de eliminarlo
+                productoItem.querySelector('.edit-producto-select').selectedIndex = 0;
+                productoItem.querySelector('.edit-cantidad').value = 1;
+                productoItem.querySelector('.edit-precio').value = '';
+                productoItem.querySelector('.edit-subtotal').value = '';
+            }
         }
     });
     
-    // Manejar envío del formulario
-    document.getElementById("formEditarCompra").addEventListener("submit", function(e) {
+    // Actualizar precio cuando se selecciona un producto
+    productosContainer.addEventListener('change', function(e) {
+        if (e.target.classList.contains('edit-producto-select')) {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const precioInput = e.target.closest('.edit-producto-item').querySelector('.edit-precio');
+            
+            if (selectedOption.value && selectedOption.dataset.precio) {
+                precioInput.value = selectedOption.dataset.precio;
+            } else {
+                precioInput.value = '';
+            }
+            
+            actualizarPrecios();
+        }
+    });
+    
+    // Actualizar precios cuando cambian cantidades o precios
+    productosContainer.addEventListener('input', function(e) {
+        if (e.target.classList.contains('edit-cantidad') || e.target.classList.contains('edit-precio')) {
+            actualizarPrecios();
+        }
+    });
+    
+    // Actualizar total cuando cambia el ajuste
+    ajusteInput.addEventListener('input', actualizarPrecios);
+    
+    // Validar fecha
+    document.getElementById('fecha').addEventListener('change', function() {
+        const fechaValida = validarFecha(this.value);
+        mostrarError('fecha', 'fechaError', !fechaValida);
+    });
+    
+    // Función para validar fecha
+    function validarFecha(fecha) {
+        const fechaSeleccionada = new Date(fecha);
+        const año = fechaSeleccionada.getFullYear();
+        return año >= 2025;
+    }
+    
+    // Función para mostrar/ocultar error
+    function mostrarError(inputId, errorId, mostrar) {
+        const input = document.getElementById(inputId);
+        const error = document.getElementById(errorId);
+        
+        if (mostrar) {
+            input.classList.add('edit-error');
+            error.classList.add('edit-show');
+        } else {
+            input.classList.remove('edit-error');
+            error.classList.remove('edit-show');
+        }
+    }
+    
+    // Interceptar envío del formulario para validación
+    formCompra.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        if (productosAgregados.length === 0) {
-            swal("Error", "Debés agregar al menos un producto", "error");
+        // Validar fecha
+        const fechaInput = document.getElementById('fecha');
+        if (!validarFecha(fechaInput.value)) {
+            mostrarError('fecha', 'fechaError', true);
+            Swal.fire({
+                icon: 'error',
+                title: 'Fecha inválida',
+                text: 'La fecha debe ser de 2025 en adelante',
+                confirmButtonColor: '#8e44ad'
+            });
             return;
         }
         
-        // Deshabilitar el botón para evitar múltiples clics
-        const submitBtn = this.querySelector('[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.value = "Actualizando...";
+        // Validar proveedor
+        const proveedor = document.getElementById('id_proveedor').value;
+        if (!proveedor) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Proveedor requerido',
+                text: 'Debes seleccionar un proveedor',
+                confirmButtonColor: '#8e44ad'
+            });
+            return;
+        }
+        // Validar productos
+        const productos = Array.from(document.querySelectorAll('.edit-producto-select')).filter(select => select.value);
+        if (productos.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Productos requeridos',
+                text: 'Debes agregar al menos un producto',
+                confirmButtonColor: '#8e44ad'
+            });
+            return;
+        }
         
-        // Enviar el formulario
-        this.submit();
-    });
-});
-
-function agregarProducto() {
-    const select = document.getElementById("productoSelect");
-    const cantidadInput = document.getElementById("cantidadInput");
-    const precioInput = document.getElementById("precioInput");
-    
-    const cantidad = parseInt(cantidadInput.value);
-    const precio = parseFloat(precioInput.value);
-    const option = select.options[select.selectedIndex];
-
-    if (!option.value || isNaN(cantidad) || cantidad <= 0 || isNaN(precio) || precio <= 0) {
-        swal("Error", "Completá todos los campos con valores válidos", "error");
-        return;
-    }
-
-    const id = option.value;
-    const nombre = option.text.split(" - $")[0];
-    const subtotal = precio * cantidad;
-
-    // Buscar producto existente
-    const index = productosAgregados.findIndex(p => p.id === id);
-    
-    if (index >= 0) {
-        // Actualizar existente
-        productosAgregados[index].cantidad += cantidad;
-        productosAgregados[index].subtotal += subtotal;
-    } else {
-        // Agregar nuevo
-        productosAgregados.push({ 
-            id, 
-            nombre, 
-            precio, 
-            cantidad, 
-            subtotal 
+        // Mostrar confirmación
+        Swal.fire({
+            title: '¿Actualizar compra?',
+            text: 'Se actualizará la información de la compra y el stock de los productos',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, actualizar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#8e44ad'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Deshabilitar botón para evitar múltiples envíos
+                const submitBtn = formCompra.querySelector('[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+                
+                // Enviar formulario
+                formCompra.submit();
+            }
         });
-    }
-
-    actualizarTabla();
-    cantidadInput.value = 1;
-    select.selectedIndex = 0;
-    precioInput.value = '';
-    select.focus();
-}
-
-function actualizarTabla() {
-    const tbody = document.querySelector("#tablaProductos tbody");
-    tbody.innerHTML = "";
-    let total = 0;
-    let descripcion = [];
-    
-    productosAgregados.forEach((prod, index) => {
-        total += prod.subtotal;
-        descripcion.push(`${prod.cantidad}x ${prod.nombre}`);
-        
-        tbody.innerHTML += `
-            <tr>
-                <td>${prod.nombre}</td>
-                <td>${prod.cantidad}</td>
-                <td>$ ${prod.precio.toFixed(2)}</td>
-                <td>$ ${prod.subtotal.toFixed(2)}</td>
-                <td>
-                    <button class="btn-action btn-delete" onclick="quitarProducto(${index})">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            </tr>`;
     });
-
-    // Actualizar totales y campos ocultos
-    document.getElementById("totalCompra").textContent = total.toFixed(2);
-    document.getElementById("montoInput").value = total;
-    document.getElementById("descripcionInput").value = descripcion.join(", ");
-    document.getElementById("productosJSON").value = JSON.stringify(productosAgregados);
-}
-
-function quitarProducto(index) {
-    productosAgregados.splice(index, 1);
-    actualizarTabla();
-}
+    // Inicializar precios
+    actualizarPrecios();
+});
 </script>
-
+</body>
+</html>
 <?php $conn->close(); ?>

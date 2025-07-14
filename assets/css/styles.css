@@ -1,15 +1,15 @@
-/* Estilo base modernizado */
+/* Estilo base modernizado con toque argentino */
 body {
   font-family: 'Quicksand', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f9f7f8;
+  background-color: #f5f9fc;
   color: #333;
 }
 
 /* Encabezado */
 header {
-  background: linear-gradient(90deg, #f4d9eb, #e3b6dc);
+  background: linear-gradient(90deg, #74acdf, #a8c6e8);
   padding: 30px 20px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -19,7 +19,7 @@ header {
 header h1 {
   margin: 0;
   font-size: 2rem;
-  color: #5e2129;
+  color: #2c3e50;
 }
 
 /* Navegación */
@@ -56,6 +56,7 @@ nav ul {
   border-radius: 50%;
   object-fit: cover;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  border: 2px solid #74acdf;
 }
 
 nav ul li {
@@ -64,14 +65,15 @@ nav ul li {
 
 nav ul li a {
   text-decoration: none;
-  color: #5e2129;
+  color: #2c3e50;
   padding: 10px 15px;
   border-radius: 5px;
   transition: all 0.3s ease;
 }
 
 nav ul li a:hover {
-  background-color: #f4d9eb;
+  background-color: #e1f0fa;
+  color: #1a5276;
 }
 
 /* Contenido */
@@ -113,9 +115,9 @@ table th, table td {
 }
 
 table th {
-  background-color: #f9f0f7;
+  background-color: #e1f0fa;
   text-align: left;
-  color: #5e2129;
+  color: #2c3e50;
 }
 
 #tablaProductos, #tablaCompras {
@@ -152,7 +154,7 @@ table th {
 .form-register input:focus, 
 .form-register select:focus, 
 .form-register textarea:focus {
-  border-color: #dd7ccbdc;
+  border-color: #74acdf;
   outline: none;
 }
 
@@ -164,7 +166,7 @@ table th {
 #buscarProducto, #buscarCompra {
   width: 100%;
   padding: 12px;
-  border: 2px solid #f4d9eb;
+  border: 2px solid #a8c6e8;
   border-radius: 6px;
   margin-bottom: 16px;
 }
@@ -177,7 +179,7 @@ button, .btn-agregar, .btn-delete, .btn-submit, .btn-tema {
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: #eaa1ec;
+  background-color: #74acdf;
   color: #fff;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
@@ -187,25 +189,25 @@ button:hover,
 .btn-delete:hover, 
 .btn-submit:hover, 
 .btn-tema:hover {
-  background-color: #bd6dc8;
+  background-color: #5d99c8;
 }
 
 /* Botón eliminar */
 .btn-delete {
-  background-color: #8f000e;
+  background-color: #e74c3c;
 }
 
 .btn-delete:hover {
-  background-color: #66000a;
+  background-color: #c0392b;
 }
 
 /* Botón enviar */
 .btn-submit {
-  background-color: #dd7ccbdc;
+  background-color: #3498db;
 }
 
 .btn-submit:hover {
-  background-color: #5e2129;
+  background-color: #2980b9;
 }
 
 /* Botón cambiar tema */
@@ -219,12 +221,12 @@ button:hover,
 /* Enlace editar */
 .btn-editar {
   text-decoration: none;
-  color: #5e2129;
+  color: #2c3e50;
   font-weight: bold;
 }
 
 .btn-editar:hover {
-  color: #007BFF;
+  color: #3498db;
 }
 
 /* Botones con clase .control */
@@ -238,7 +240,7 @@ button.control {
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: #eaa1ec;
+  background-color: #74acdf;
   color: #fff;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
@@ -247,6 +249,5 @@ button.control {
 .control[type="button"]:hover,
 .control[type="reset"]:hover,
 button.control:hover {
-  background-color: #bd6dc8;
+  background-color: #5d99c8;
 }
-

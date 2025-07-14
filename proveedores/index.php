@@ -182,6 +182,7 @@ function cambiarEstado(idProveedor, estado) {
 
 function editarProveedor(id) {
     // Lógica para editar proveedor
+    window.location.href = `editar_proveedor.php?id=${id}`;
 }
 function filtrarProveedores() {
     const filtroEstado = document.getElementById('filtroEstado').value.toLowerCase();

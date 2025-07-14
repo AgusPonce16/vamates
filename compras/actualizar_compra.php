@@ -1,134 +1,129 @@
 <?php
 include '../config/config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_compra = intval($_POST['id_compra']);
-    $fecha = $_POST['fecha'];
-    $id_proveedor = $_POST['id_proveedor'];
-    $estado = $_POST['estado'];
-    $descripcion = $_POST['descripcion'];
-    $monto = floatval($_POST['monto']);
-    $productosJSON = $_POST['productosJSON'];
-    $ajuste = isset($_POST['ajuste']) ? floatval($_POST['ajuste']) : 0; // Capturar el ajuste
-    
-    // Validar datos
-    if (empty($fecha) || empty($id_proveedor) || empty($estado) || empty($productosJSON)) {
-        header('Location: editar_compra.php?id=' . $id_compra . '&alert=error');
-        exit;
-    }
-    
-    $productos = json_decode($productosJSON, true);
-    if (empty($productos)) {
-        header('Location: editar_compra.php?id=' . $id_compra . '&alert=error');
-        exit;
-    }
-    
-    // Calcular monto final con ajuste
-    $monto_final = $monto + $ajuste;
-
-    // Iniciar transacción
-    $conn->begin_transaction();
-    
-    try {
-        // 1. Obtener estado actual y productos actuales
-        $sql_compra_actual = "SELECT estado FROM compras WHERE id = ?";
-        $stmt = $conn->prepare($sql_compra_actual);
-        $stmt->bind_param("i", $id_compra);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $compra_actual = $result->fetch_assoc();
-        $estado_anterior = $compra_actual['estado'];
-        
-        // 2. Obtener productos actuales para manejar stock
-        $sql_productos_actuales = "SELECT id_producto, cantidad 
-                                    FROM detalle_compras 
-                                    WHERE id_compra = ?";
-        $stmt = $conn->prepare($sql_productos_actuales);
-        $stmt->bind_param("i", $id_compra);
-        $stmt->execute();
-        $productos_actuales = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        
-        // 3. Si el estado anterior era 'pagada', revertir el stock
-        if ($estado_anterior === 'pagada') {
-            foreach ($productos_actuales as $prod_actual) {
-                $sql_revertir = "UPDATE productos SET stock = stock - ? WHERE id = ?";
-                $stmt_revertir = $conn->prepare($sql_revertir);
-                $stmt_revertir->bind_param("ii", $prod_actual['cantidad'], $prod_actual['id_producto']);
-                $stmt_revertir->execute();
-            }
-        }
-
-        // 4. Actualizar la compra principal con el monto final (incluyendo ajuste)
-        $sql_compra = "UPDATE compras SET 
-                        fecha = ?, 
-                        descripcion = ?, 
-                        monto = ?, 
-                        id_proveedor = ?, 
-                        estado = ? 
-                        WHERE id = ?";
-        $stmt_compra = $conn->prepare($sql_compra);
-        $stmt_compra->bind_param("ssdisi", $fecha, $descripcion, $monto_final, $id_proveedor, $estado, $id_compra);
-        
-        if (!$stmt_compra->execute()) {
-            throw new Exception("Error al actualizar la compra");
-        }
-        
-        // 5. Eliminar detalles existentes
-        $sql_delete_detalles = "DELETE FROM detalle_compras WHERE id_compra = ?";
-        $stmt_delete = $conn->prepare($sql_delete_detalles);
-        $stmt_delete->bind_param("i", $id_compra);
-        $stmt_delete->execute();
-        
-        // 6. Insertar nuevos detalles
-        $sql_detalle = "INSERT INTO detalle_compras (id_compra, id_producto, cantidad, precio_unitario) 
-                VALUES (?, ?, ?, ?)";
-        $stmt_detalle = $conn->prepare($sql_detalle);
-        
-        foreach ($productos as $producto) {
-            $id_producto = intval($producto['id']);
-            $cantidad = intval($producto['cantidad']);
-            $precio = floatval($producto['precio']);
-            
-            // Insertar detalle
-            $stmt_detalle->bind_param("iiid", $id_compra, $id_producto, $cantidad, $precio);
-            if (!$stmt_detalle->execute()) {
-                throw new Exception("Error al insertar detalle del producto");
-            }
-            
-            // 7. Solo sumar stock si el nuevo estado es 'pagada'
-            if ($estado === 'pagada') {
-                $sql_stock = "UPDATE productos SET stock = stock + ? WHERE id = ?";
-                $stmt_stock = $conn->prepare($sql_stock);
-                $stmt_stock->bind_param("ii", $cantidad, $id_producto);
-                if (!$stmt_stock->execute()) {
-                    throw new Exception("Error al actualizar stock del producto");
-                }
-            }
-        }
-        
-        // Confirmar transacción
-        $conn->commit();
-        
-        // Redirigir con éxito
-        header('Location: index.php?alert=updated');
-        exit;
-        
-    } catch (Exception $e) {
-        // Revertir transacción en caso de error
-        $conn->rollback();
-        
-        // Log del error (opcional)
-        error_log("Error en actualizar_compra.php: " . $e->getMessage());
-        
-        // Redirigir con error
-        header('Location: editar_compra.php?id=' . $id_compra . '&alert=error');
-        exit;
-    }
-} else {
-    // Si no es POST, redirigir al índice
-    header('Location: index.php');
-    exit;
+// Verificar si se recibieron los datos del formulario
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['compra_id'])) {
+    header('Location: index.php?alert=error&message=Datos incompletos');
+    exit();
 }
 
-$conn->close();
-?>
+$compra_id = intval($_POST['compra_id']);
+$fecha = $_POST['fecha'];
+$id_proveedor = intval($_POST['id_proveedor']);
+$estado = $_POST['estado'];
+$ajuste = floatval($_POST['ajuste']);
+$total = floatval($_POST['total']);
+$productos_originales = json_decode($_POST['productos_originales'], true);
+
+// Iniciar transacción para asegurar la integridad de los datos
+$conn->begin_transaction();
+
+try {
+    // 1. Actualizar información básica de la compra
+    $sql_update = "UPDATE compras SET 
+                  fecha = ?, 
+                  id_proveedor = ?, 
+                  estado = ?, 
+                  monto = ?,
+                  descripcion = CONCAT('Compra #', id, ' - ', DATE_FORMAT(fecha, '%d/%m/%Y'))
+                  WHERE id = ?";
+    $stmt_update = $conn->prepare($sql_update);
+    $stmt_update->bind_param("sisdi", $fecha, $id_proveedor, $estado, $total, $compra_id);
+    $stmt_update->execute();
+    
+    // 2. Obtener los productos actuales del formulario
+    $productos_ids = $_POST['producto_id'];
+    $cantidades = $_POST['cantidad'];
+    $precios_unitarios = $_POST['precio_unitario'];
+    
+    // 3. Eliminar todos los detalles de la compra actual
+    $sql_delete = "DELETE FROM detalle_compras WHERE id_compra = ?";
+    $stmt_delete = $conn->prepare($sql_delete);
+    $stmt_delete->bind_param("i", $compra_id);
+    $stmt_delete->execute();
+    
+    // 4. Preparar consultas
+    $sql_insert_detalle = "INSERT INTO detalle_compras (id_compra, id_producto, cantidad, precio_unitario) 
+                          VALUES (?, ?, ?, ?)";
+    $stmt_insert_detalle = $conn->prepare($sql_insert_detalle);
+    
+    $sql_aumentar_stock = "UPDATE productos SET stock = stock + ? WHERE id = ?";
+    $stmt_aumentar_stock = $conn->prepare($sql_aumentar_stock);
+    
+    $sql_reducir_stock = "UPDATE productos SET stock = stock - ? WHERE id = ?";
+    $stmt_reducir_stock = $conn->prepare($sql_reducir_stock);
+    
+    // 5. Restaurar stock de productos eliminados (RESTAR del stock - porque eran compras)
+    foreach ($productos_originales as $original) {
+        $encontrado = false;
+        for ($i = 0; $i < count($productos_ids); $i++) {
+            if ($productos_ids[$i] == $original['id_producto']) {
+                $encontrado = true;
+                break;
+            }
+        }
+        
+        if (!$encontrado) {
+            // Producto eliminado - RESTAR del stock (porque antes se había sumado al comprar)
+            $stmt_reducir_stock->bind_param("ii", $original['cantidad'], $original['id_producto']);
+            $stmt_reducir_stock->execute();
+        }
+    }
+    
+    // 6. Procesar productos actuales
+    for ($i = 0; $i < count($productos_ids); $i++) {
+        $producto_id = intval($productos_ids[$i]);
+        $cantidad = intval($cantidades[$i]);
+        $precio_unitario = floatval($precios_unitarios[$i]);
+        
+        // Insertar detalle de compra
+        $stmt_insert_detalle->bind_param("iiid", $compra_id, $producto_id, $cantidad, $precio_unitario);
+        $stmt_insert_detalle->execute();
+        
+        // Buscar en productos originales
+        $original_cantidad = 0;
+        foreach ($productos_originales as $original) {
+            if ($original['id_producto'] == $producto_id) {
+                $original_cantidad = $original['cantidad'];
+                break;
+            }
+        }
+        
+        // Calcular diferencia
+        $diferencia = $cantidad - $original_cantidad;
+        
+        if ($original_cantidad > 0) {
+            // Producto existente - ajustar stock según diferencia
+            if ($diferencia != 0) {
+                if ($diferencia > 0) {
+                    // Más cantidad - SUMAR al stock (comprar más)
+                    $stmt_aumentar_stock->bind_param("ii", $diferencia, $producto_id);
+                } else {
+                    // Menos cantidad - RESTAR del stock (devolver)
+                    $diferencia_abs = abs($diferencia);
+                    $stmt_reducir_stock->bind_param("ii", $diferencia_abs, $producto_id);
+                }
+                $stmt_aumentar_stock->execute();
+            }
+        } else {
+            // Producto nuevo - SUMAR al stock (comprar)
+            $stmt_aumentar_stock->bind_param("ii", $cantidad, $producto_id);
+            $stmt_aumentar_stock->execute();
+        }
+    }
+    
+    // Confirmar todas las operaciones
+    $conn->commit();
+    
+    header("Location: index.php?alert=updated&message=Compra actualizada correctamente");
+    exit();
+    
+} catch (Exception $e) {
+    // Revertir todas las operaciones en caso de error
+    $conn->rollback();
+    
+    error_log("Error al actualizar compra: " . $e->getMessage());
+    
+    header("Location: index.php?alert=error&message=Error al actualizar la compra: " . $e->getMessage());
+    exit();
+}

@@ -11,6 +11,22 @@ $cantidades = $_POST['cantidad'];
 $precio_unitario = $_POST['precio_unitario'];
 $descuentos = $_POST['descuento_producto'] ?? array_fill(0, count($productos), 0);
 
+// Verificar stock antes de comenzar la transacción
+foreach ($productos as $i => $producto_id) {
+    $cantidad = $cantidades[$i];
+    $sql = "SELECT stock FROM productos WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $producto_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $producto = $result->fetch_assoc();
+    
+    if ($producto['stock'] < $cantidad && $estado == 'pagada') {
+        header("Location: index.php?error=sin_stock");
+        exit();
+    }
+}
+
 try {
     $conn->begin_transaction();
     
@@ -58,7 +74,9 @@ try {
     header("Location: index.php?alert=added");
 } catch (Exception $e) {
     $conn->rollback();
-    header("Location: index.php?alert=error&message=" . urlencode($e->getMessage()));
+    error_log("Error en venta: " . $e->getMessage());
+    header("Location: index.php?alert=error&message=" . urlencode("Error: " . $e->getMessage()));
+    exit();
 }
 
 $conn->close();

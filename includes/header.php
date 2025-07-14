@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>VA MATES</title>
   <link rel="stylesheet" href="/vamates3/assets/css/styles.css">
-  <img src="/vamates3/img/vamates.jpg" alt="Logo" class="logo">
+  <img src="/vamates3/img/vamateslogo.jpg" alt="Logo" class="logo">
 </head>
 <body>
   <header>

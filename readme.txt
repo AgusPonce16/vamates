@@ -22,9 +22,8 @@ Funciones principales:
 - Registro de compras y ventas
 - Control de stock actualizado en tiempo real
 - Visualización de métricas clave (ventas, ganancias, gastos)
-- Dashboard con filtros por fechas
 - Reportes de productos más vendidos
-- Control de estado de las compras (pendiente, pagada, cancelada)
+- Control de estado (pendiente, pagada, cancelada / activo o desactivo)
 - Calculador temporal de paquetes de yerba
 
 Requisitos:
@@ -43,11 +42,11 @@ Instalación:
 
 Credenciales:
 --------------------------
-Deberas crear el administrador
+Deberas crear el administrador en el login 
 
 Autor:
 -------
-Desarrollado por Agustín Ponce - Técnico en Desarrollo de Software y estudiante de Data Science
+Desarrollado por Agustín Ponce - Técnico en Desarrollo de Software y estudiante de Data Science e IA
 
 Contacto:
 ----------

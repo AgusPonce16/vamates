@@ -43,35 +43,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<!-- Mantener el mismo estilo del index.php -->
-<div class="container">
-    <div class="column left" style="max-width: 800px; margin: 0 auto;">
-        <div class="header-section">
-            <h2>Editar Proveedor #<?= $proveedor['id'] ?></h2>
-            <a href="index.php" class="btn-back">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Proveedor</title>
+    <script src="https://kit.fontawesome.com/b408879b64.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/vamates3/assets/css/editar/edit.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+<div class="edit-container">
+    <div class="edit-form">
+        <div class="edit-header-section">
+            <h2><i class="fas fa-truck"></i> Editar Proveedor #<?= $proveedor['id'] ?></h2>
+            <a href="index.php" class="edit-btn-back">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
         </div>
+
+        <?php if (isset($_GET['alert']) && $_GET['alert'] == 'error'): ?>
+            <div class="edit-alert edit-alert-error">
+                Error al actualizar el proveedor. Por favor, verifica los datos.
+            </div>
+        <?php endif; ?>
+
+        <div class="edit-info-box">
+            <h4>Información Actual del Proveedor</h4>
+            <p><strong>Nombre:</strong> <?= htmlspecialchars($proveedor['nombre']) ?></p>
+            <p><strong>Detalle:</strong> <?= htmlspecialchars($proveedor['detalle']) ?></p>
+        </div>
         
         <form action="editar_proveedor.php?id=<?= $id_proveedor ?>" method="post">
-            <div class="form-group">
+            <div class="edit-form-group">
                 <label for="nombre">Nombre</label>
-                <input class="control" type="text" name="nombre" id="nombre" 
+                <input class="edit-control" type="text" name="nombre" id="nombre" 
                         value="<?= htmlspecialchars($proveedor['nombre']) ?>" required>
             </div>
             
-            <div class="form-group">
+            <div class="edit-form-group">
                 <label for="detalle">Detalle</label>
-                <textarea class="control" name="detalle" id="detalle" rows="3"><?= htmlspecialchars($proveedor['detalle']) ?></textarea>
+                <textarea class="edit-control" name="detalle" id="detalle" rows="3"><?= htmlspecialchars($proveedor['detalle']) ?></textarea>
             </div>
             
-            <button type="submit" class="btn-submit">
+            <button type="submit" class="edit-btn-submit">
                 <i class="fas fa-save"></i> Actualizar Proveedor
             </button>
         </form>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Interceptar envío del formulario para validación
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const nombre = document.getElementById('nombre').value.trim();
+        
+        if (nombre === '') {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El nombre del proveedor es requerido',
+                confirmButtonColor: '#8e44ad'
+            });
+            return;
+        }
+        
+        // Deshabilitar el botón para evitar múltiples clics
+        const submitBtn = this.querySelector('[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+    });
+});
+</script>
+
 <?php 
 $conn->close();
 ?>
+</body>
+</html>

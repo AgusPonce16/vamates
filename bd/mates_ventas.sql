@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-06-2025 a las 02:21:30
+-- Tiempo de generación: 14-07-2025 a las 17:17:25
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,8 +33,19 @@ CREATE TABLE `compras` (
   `monto` decimal(10,2) NOT NULL,
   `fecha` date NOT NULL,
   `estado` enum('pendiente','pagada','cancelada') DEFAULT 'pendiente',
-  `id_proveedor` int(11) DEFAULT NULL
+  `id_proveedor` int(11) DEFAULT NULL,
+  `ajuste` decimal(10,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `compras`
+--
+
+INSERT INTO `compras` (`id`, `descripcion`, `monto`, `fecha`, `estado`, `id_proveedor`, `ajuste`) VALUES
+(1, '3 camioneros de algarrobo, 2 imperiales de algarrobo', 117000.00, '2025-04-07', 'pagada', 1, 0.00),
+(2, '18 baldo 500gr, 5 Canarias Ed. especial', 161500.00, '2025-04-14', 'pagada', 3, 0.00),
+(3, '2x Camionero de algarrobo, 1x Imperial de calabaza', 123200.00, '2025-05-05', 'pagada', 4, 0.00),
+(4, '10x Baldo 500g, 10x Canarias tradicional 500g', 163550.00, '2025-06-17', 'pagada', 2, 0.00);
 
 -- --------------------------------------------------------
 
@@ -51,27 +62,18 @@ CREATE TABLE `detalle_compras` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Disparadores `detalle_compras`
+-- Volcado de datos para la tabla `detalle_compras`
 --
-DELIMITER $$
-CREATE TRIGGER `actualizar_stock_despues_compra` AFTER INSERT ON `detalle_compras` FOR EACH ROW BEGIN
-    -- Declarar variable para el estado
-    DECLARE estado_compra VARCHAR(20);
-    
-    -- Obtener el estado de la compra
-    SELECT estado INTO estado_compra 
-    FROM compras 
-    WHERE id = NEW.id_compra;
-    
-    -- Solo actualizar stock si la compra está pagada
-    IF estado_compra = 'pagada' THEN
-        UPDATE productos 
-        SET stock = stock + NEW.cantidad 
-        WHERE id = NEW.id_producto;
-    END IF;
-END
-$$
-DELIMITER ;
+
+INSERT INTO `detalle_compras` (`id`, `id_compra`, `id_producto`, `cantidad`, `precio_unitario`) VALUES
+(1, 1, 6, 10.00, 4170.00),
+(2, 1, 7, 2.00, 2325.00),
+(3, 2, 8, 5.00, 3185.00),
+(4, 2, 9, 3.00, 2860.00),
+(5, 3, 5, 2.00, 11200.00),
+(6, 3, 6, 1.00, 13200.00),
+(7, 4, 1, 10.00, 4170.00),
+(8, 4, 2, 10.00, 4430.00);
 
 -- --------------------------------------------------------
 
@@ -89,6 +91,22 @@ CREATE TABLE `detalle_ventas` (
   `descuento` decimal(5,2) DEFAULT 0.00 COMMENT 'Porcentaje de descuento aplicado al producto'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `detalle_ventas`
+--
+
+INSERT INTO `detalle_ventas` (`id`, `venta_id`, `producto_id`, `cantidad`, `subtotal`, `precio_unitario`, `descuento`) VALUES
+(1, 1, 6, 2, 11000.00, 5500.00, 0.00),
+(2, 1, 7, 1, 5500.00, 5500.00, 0.00),
+(3, 2, 5, 1, 22500.00, 22500.00, 0.00),
+(4, 3, 1, 5, 27000.00, 5500.00, 0.00),
+(5, 3, 2, 3, 17100.00, 5700.00, 0.00),
+(6, 4, 4, 2, 11000.00, 5500.00, 0.00),
+(7, 4, 5, 1, 23500.00, 23500.00, 0.00),
+(8, 5, 7, 6, 36000.00, 6000.00, 0.00),
+(9, 5, 3, 1, 6500.00, 6500.00, 0.00),
+(10, 5, 6, 3, 70500.00, 23500.00, 0.00);
+
 -- --------------------------------------------------------
 
 --
@@ -104,6 +122,16 @@ CREATE TABLE `gastos` (
   `categoria` enum('Servicios','Transporte','Comida','Boludeces','Utilidades','Envíos','Combustible','Devoluciones','Educacion') NOT NULL,
   `estado` enum('pendiente','pagada','cancelada') NOT NULL DEFAULT 'pagada'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `gastos`
+--
+
+INSERT INTO `gastos` (`id`, `descripcion`, `monto`, `fecha`, `tipo`, `categoria`, `estado`) VALUES
+(1, 'Nafta', 25000.00, '2025-04-05', 'Fijo', 'Combustible', 'pagada'),
+(2, 'Comida', 23000.00, '2025-04-05', 'Variable', 'Comida', 'pagada'),
+(3, 'Envio santolaria', 9500.00, '2025-04-23', 'Variable', 'Envíos', 'pagada'),
+(4, 'Publicidad', 24000.00, '2025-05-09', 'Variable', 'Utilidades', 'pagada');
 
 -- --------------------------------------------------------
 
@@ -121,6 +149,22 @@ CREATE TABLE `productos` (
   `estado` enum('activo','desactivado') NOT NULL DEFAULT 'activo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `productos`
+--
+
+INSERT INTO `productos` (`id`, `nombre`, `precio_compra`, `precio`, `stock`, `diferencia`, `estado`) VALUES
+(1, 'Baldo 500g', 4170.00, 5800.00, 74, 0.00, 'activo'),
+(2, 'Canarias tradicional 500g', 4430.00, 6000.00, 6, 1370.00, 'activo'),
+(3, 'Canarias serena 500g', 4830.00, 6500.00, 2, 1470.00, 'activo'),
+(4, 'Rei verde premium 500g', 3620.00, 5500.00, 12, 1560.00, 'activo'),
+(5, 'Camionero de calabaza', 11200.00, 22000.00, 3, 9800.00, 'activo'),
+(6, 'Imperial de algarrobo', 13200.00, 23500.00, 17, 9300.00, 'activo'),
+(7, 'Bombilla de acero', 2500.00, 6000.00, 43, 3000.00, 'activo'),
+(8, 'Termos media manija de acero', 17800.00, 27000.00, 4, 7200.00, 'activo'),
+(9, 'Verdecita 500g', 2750.00, 4700.00, 25, 0.00, 'activo'),
+(10, 'Grabados', 2200.00, 4500.00, 9996, 3300.00, 'activo');
+
 -- --------------------------------------------------------
 
 --
@@ -133,6 +177,17 @@ CREATE TABLE `proveedores` (
   `detalle` text DEFAULT NULL,
   `estado` enum('activo','desactivado') NOT NULL DEFAULT 'activo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `proveedores`
+--
+
+INSERT INTO `proveedores` (`id`, `nombre`, `detalle`, `estado`) VALUES
+(1, 'ik mates', '5% off en efectivo minimo $70.000', 'activo'),
+(2, 'todo mates lp', 'Las parejas, envio mas barato, 15kg, no tiene Rei Verde', 'activo'),
+(3, 'esperanza', '20kg minimo', 'activo'),
+(4, 'de mi tierra', 'No tiene descuento pero esta mas cerca', 'activo'),
+(5, 'tu matero', 'En el medio del centro pero tiene termos baratos', 'activo');
 
 -- --------------------------------------------------------
 
@@ -160,8 +215,20 @@ CREATE TABLE `ventas` (
   `total` decimal(10,2) NOT NULL,
   `envio` decimal(10,2) DEFAULT 0.00 COMMENT 'Costo de envío de la venta',
   `estado` enum('pendiente','pagada','cancelada') NOT NULL DEFAULT 'pagada',
-  `numero_factura` varchar(20) DEFAULT NULL
+  `numero_factura` varchar(20) DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `ventas`
+--
+
+INSERT INTO `ventas` (`id`, `fecha`, `total`, `envio`, `estado`, `numero_factura`, `descripcion`) VALUES
+(1, '2025-04-05', 52500.00, 0.00, 'pagada', NULL, 'Venta de productos varios'),
+(2, '2025-04-13', 22500.00, 0.00, 'pagada', NULL, 'Venta de imperial de algarrobo'),
+(3, '2025-05-02', 135900.00, 0.00, 'pagada', NULL, 'Venta mayorista'),
+(4, '2025-06-10', 105100.00, 3550.00, 'pagada', NULL, 'Venta con envío'),
+(5, '2025-07-14', 113000.00, 0.00, 'pagada', NULL, NULL);
 
 --
 -- Disparadores `ventas`
@@ -254,13 +321,6 @@ ALTER TABLE `proveedores`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indices de la tabla `usuarios`
---
-ALTER TABLE `usuarios`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `nombre` (`nombre`);
-
---
 -- Indices de la tabla `ventas`
 --
 ALTER TABLE `ventas`
@@ -274,49 +334,43 @@ ALTER TABLE `ventas`
 -- AUTO_INCREMENT de la tabla `compras`
 --
 ALTER TABLE `compras`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_compras`
 --
 ALTER TABLE `detalle_compras`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=156;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_ventas`
 --
 ALTER TABLE `detalle_ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=359;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `gastos`
 --
 ALTER TABLE `gastos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedores`
 --
 ALTER TABLE `proveedores`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
---
--- AUTO_INCREMENT de la tabla `usuarios`
---
-ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `ventas`
 --
 ALTER TABLE `ventas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=156;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Restricciones para tablas volcadas

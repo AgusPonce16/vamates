@@ -9,325 +9,319 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-</head>
-
-<style>
+    <style>
         :root {
-        --primary-color: #8e44ad;
-        --secondary-color: #9b59b6;
-        --danger-color: #e74c3c;
-        --warning-color: #f39c12;
-        --success-color: #2ecc71;
-        --light-color: #f5f5f5;
-        --dark-color: #333;
-        --border-radius: 8px;
-        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
+            --primary-color: #8e44ad;
+            --secondary-color: #9b59b6;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #2ecc71;
+            --light-color: #f5f5f5;
+            --dark-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
 
-    .container {
-        display: flex;
-        gap: 30px;
-        padding: 20px;
-        font-family: 'Roboto', sans-serif;
-    }
+        .container {
+            display: flex;
+            gap: 30px;
+            padding: 20px;
+            font-family: 'Roboto', sans-serif;
+        }
 
-    .column.left, .column.right {
-        flex: 1;
-        background: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: var(--border-radius);
-        padding: 25px;
-        box-shadow: var(--box-shadow);
-        max-height: 90vh;
-        overflow-y: auto;
-    }
+        .column.left, .column.right {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
 
-    h2 {
-        color: var(--dark-color);
-        margin-bottom: 20px;
-        font-weight: 500;
-        border-bottom: 2px solid var(--primary-color);
-        padding-bottom: 10px;
-    }
+        h2 {
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            font-weight: 500;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
 
-    .control {
-        width: 100%;
-        padding: 10px 15px;
-        margin: 8px 0 15px;
-        border: 1px solid #ddd;
-        border-radius: var(--border-radius);
-        box-sizing: border-box;
-        font-size: 14px;
-        transition: border-color 0.3s;
-    }
+        .control {
+            width: 100%;
+            padding: 10px 15px;
+            margin: 8px 0 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
 
-    .control:focus {
-        border-color: var(--primary-color);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
-    }
+        .control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
+        }
 
-    /* Estilo para campo de precio de solo lectura */
-    .control[readonly] {
-        background-color: #f8f9fa;
-        color: #6c757d;
-        cursor: not-allowed;
-    }
+        .control[readonly] {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
 
-    .form-container {
-        background: #f9f9f9;
-        border: 1px solid #e0e0e0;
-        border-radius: var(--border-radius);
-        padding: 20px;
-        margin-bottom: 25px;
-    }
+        .form-container {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
 
-    .btn-submit {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 500;
-        transition: background-color 0.3s;
-        width: 100%;
-    }
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
 
-    .btn-submit:hover {
-        background-color: var(--secondary-color);
-    }
+        .btn-submit:hover {
+            background-color: var(--secondary-color);
+        }
 
-    .btn-submit:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-    }
+        .btn-submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
 
-    .btn-agregar {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        font-size: 14px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 15px;
-    }
+        .btn-agregar {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
 
-    .btn-agregar:hover {
-        background-color: var(--secondary-color);
-    }
+        .btn-agregar:hover {
+            background-color: var(--secondary-color);
+        }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-        font-size: 14px;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
 
-    th, td {
-        border: 1px solid #e0e0e0;
-        padding: 12px;
-        text-align: left;
-    }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            text-align: left;
+        }
 
-    th {
-        background-color: var(--primary-color);
-        color: white;
-        font-weight: 500;
-        position: sticky;
-        top: 0;
-    }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
 
-    tr:nth-child(even) {
-        background-color: #fafafa;
-    }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
 
-    tr:hover {
-        background-color: #f0e6f6;
-    }
+        tr:hover {
+            background-color: #f0e6f6;
+        }
 
-    .containerBusq {
-        margin-bottom: 15px;
-        position: relative;
-    }
+        .containerBusq {
+            margin-bottom: 15px;
+            position: relative;
+        }
 
-    .search-input {
-        width: 100%;
-        padding: 10px 15px 10px 40px;
-        font-size: 14px;
-        border-radius: var(--border-radius);
-        border: 1px solid #ddd;
-        box-sizing: border-box;
-        transition: all 0.3s;
-    }
+        .search-input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            font-size: 14px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
 
-    .search-input:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
-    }
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(142, 68, 173, 0.2);
+        }
 
-    .search-icon {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #777;
-    }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
 
-    .total-display {
-        font-size: 1.2em;
-        font-weight: 500;
-        margin: 15px 0;
-        padding: 12px;
-        background-color: #e8f5e9;
-        border-radius: var(--border-radius);
-        text-align: center;
-    }
+        .total-display {
+            font-size: 1.2em;
+            font-weight: 500;
+            margin: 15px 0;
+            padding: 12px;
+            background-color: #e8f5e9;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
 
-    .subtotal-display {
-        font-size: 1.1em;
-        font-weight: 400;
-        margin: 10px 0;
-        padding: 10px;
-        background-color: #f0f0f0;
-        border-radius: var(--border-radius);
-        text-align: center;
-    }
+        .subtotal-display {
+            font-size: 1.1em;
+            font-weight: 400;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
 
-    .ajuste-display {
-        font-size: 1.1em;
-        font-weight: 400;
-        margin: 10px 0;
-        padding: 10px;
-        border-radius: var(--border-radius);
-        text-align: center;
-    }
+        .ajuste-display {
+            font-size: 1.1em;
+            font-weight: 400;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
 
-    .ajuste-positivo {
-        background-color: #fff3cd;
-        color: #856404;
-    }
+        .ajuste-positivo {
+            background-color: #fff3cd;
+            color: #856404;
+        }
 
-    .ajuste-negativo {
-        background-color: #d1ecf1;
-        color: #0c5460;
-    }
+        .ajuste-negativo {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
 
-    .ajuste-cero {
-        background-color: #f8f9fa;
-        color: #6c757d;
-    }
+        .ajuste-cero {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
 
-    .btn-action {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 5px;
-        margin: 0 3px;
-        font-size: 16px;
-        transition: transform 0.2s;
-    }
+        .btn-action {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin: 0 3px;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
 
-    .btn-action:hover {
-        transform: scale(1.1);
-    }
+        .btn-action:hover {
+            transform: scale(1.1);
+        }
 
-    .btn-edit {
-        color: var(--primary-color);
-    }
+        .btn-edit {
+            color: var(--primary-color);
+        }
 
-    .btn-delete {
-        color: var(--danger-color);
-    }
+        .btn-delete {
+            color: var(--danger-color);
+        }
 
-    .badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 500;
-    }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
 
-    .badge-proveedor {
-        background-color: #d1c4e9;
-        color: #4527a0;
-    }
+        .badge-proveedor {
+            background-color: #d1c4e9;
+            color: #4527a0;
+        }
 
-    /* NUEVOS ESTILOS PARA FECHAS HORIZONTALES */
-    .fecha-header {
-        background-color: #f0f0f0 !important;
-        color: #333 !important;
-        font-weight: bold !important;
-        font-size: 15px !important;
-        text-align: center !important;
-        padding: 15px !important;
-        border: none !important;
-        border-top: 2px solid #ddd !important;
-        border-bottom: 2px solid #ddd !important;
-    }
+        .fecha-header {
+            background-color: #f0f0f0 !important;
+            color: #333 !important;
+            font-weight: bold !important;
+            font-size: 15px !important;
+            text-align: center !important;
+            padding: 15px !important;
+            border: none !important;
+            border-top: 2px solid #ddd !important;
+            border-bottom: 2px solid #ddd !important;
+        }
 
-    .fecha-header td {
-        border: none !important;
-        background-color: #f0f0f0 !important;
-        color: #333 !important;
-        font-weight: bold !important;
-    }
+        .fecha-header td {
+            border: none !important;
+            background-color: #f0f0f0 !important;
+            color: #333 !important;
+            font-weight: bold !important;
+        }
 
-    /* Las filas de compras no necesitan estilos especiales adicionales */
-    .compra-row:hover {
-        background-color: #f0e6f6 !important;
-    }
+        .compra-row:hover {
+            background-color: #f0e6f6 !important;
+        }
 
-    .product-details {
-        padding-left: 30px !important;
-    }
+        .product-details {
+            padding-left: 30px !important;
+        }
 
-    
-    .estado-badge {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-    }
-    
-    .estado-pagada {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    
-    .estado-pendiente {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-    
-    .estado-cancelada {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
+        .estado-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .estado-pagada {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .estado-pendiente {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .estado-cancelada {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
 
-    /* Estilos para mostrar errores de validación */
-    .control.error {
-        border-color: var(--danger-color);
-        background-color: #fff5f5;
-    }
+        .control.error {
+            border-color: var(--danger-color);
+            background-color: #fff5f5;
+        }
 
-    .error-message {
-        color: var(--danger-color);
-        font-size: 12px;
-        margin-top: -10px;
-        margin-bottom: 10px;
-        display: none;
-    }
+        .error-message {
+            color: var(--danger-color);
+            font-size: 12px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+        }
 
-    .error-message.show {
-        display: block;
-    }
-</style>
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
 
 <div class="container">
     <!-- Columna Izquierda: Formulario para Agregar Compra -->
@@ -412,11 +406,11 @@
             
             <!-- Campos ocultos para el formulario -->
             <input type="hidden" name="productosJSON" id="productosJSON">
-            <input type="hidden" name="descripcion" id="descripcionInput">
             <input type="hidden" name="monto" id="montoInput">
             <input type="hidden" name="ajuste" id="ajusteInput" value="0">
-            
+            <input type="hidden" name="descripcion" id="descripcionInput">
             <input class="btn-submit" type="submit" value="Guardar Compra">
+            
         </form>
     </div>
 
@@ -641,13 +635,22 @@ function actualizarTabla() {
     let subtotalProductos = 0;
     let descripcion = [];
     
+    if (productosAgregados.length === 0) {
+        document.getElementById("descripcionInput").value = "Sin productos";
+        document.getElementById("subtotalProductos").textContent = "0.00";
+        calcularTotalFinal();
+        return;
+    }
+    
     productosAgregados.forEach((prod, index) => {
+        // Validar que el producto tenga nombre
+        const nombreProducto = prod.nombre || `Producto ${index + 1}`;
         subtotalProductos += prod.subtotal;
-        descripcion.push(`${prod.cantidad}x ${prod.nombre}`);
+        descripcion.push(`${prod.cantidad}x ${nombreProducto}`);
         
         tbody.innerHTML += `
             <tr>
-                <td>${prod.nombre}</td>
+                <td>${nombreProducto}</td>
                 <td>${prod.cantidad}</td>
                 <td>$ ${prod.precio.toFixed(2)}</td>
                 <td>$ ${prod.subtotal.toFixed(2)}</td>
@@ -659,14 +662,18 @@ function actualizarTabla() {
             </tr>`;
     });
 
-    // Actualizar subtotal de productos
+    // Actualizar subtotal
     document.getElementById("subtotalProductos").textContent = subtotalProductos.toFixed(2);
     
-    // Actualizar descripción
-    document.getElementById("descripcionInput").value = descripcion.join(", ");
+    // Actualizar descripción (asegurarse de que siempre tenga valor)
+    const descripcionTexto = descripcion.length > 0 ? descripcion.join(", ") : "Compra sin productos";
+    document.getElementById("descripcionInput").value = descripcionTexto;
+    console.log("Descripción generada:", descripcionTexto); // Para depuración
+    
+    // Actualizar JSON de productos
     document.getElementById("productosJSON").value = JSON.stringify(productosAgregados);
     
-    // Recalcular total final
+    // Recalcular total
     calcularTotalFinal();
 }
 
